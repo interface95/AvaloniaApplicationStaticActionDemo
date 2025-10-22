@@ -38,21 +38,15 @@ jobs:
           7z e -y libHarfBuzzSharp-10.0.26100.0.7z
           7z e -y libSkiaSharp-2.88.9-10.0.26100.0.7z
           ls -al
-          mkdir -p ../AvaloniaApplicationStaticActionDemo/native
           mv *.lib *.pdb ../AvaloniaApplicationStaticActionDemo/native/
 
       - name: Build
         working-directory: ${{github.workspace}}
         shell: pwsh
         run: |
-          msbuild /m /t:restore AvaloniaApplicationStaticActionDemo/AvaloniaApplicationStaticActionDemo.csproj /p:Configuration=Release /p:Platform="Any CPU"
+          msbuild /m /t:restore AvaloniaApplicationStaticActionDemo.sln /p:Configuration=Release /p:Platform="Any CPU"
           dotnet publish AvaloniaApplicationStaticActionDemo\AvaloniaApplicationStaticActionDemo.csproj -r win-x64 -c Release
-          $nativePath = "AvaloniaApplicationStaticActionDemo\bin\Release\net8.0-windows\win-x64\native"
-          if (Test-Path $nativePath) {
-            mv $nativePath\* .
-          } else {
-            Write-Host "native 目录不存在，跳过移动"
-          }
+          mv AvaloniaApplicationStaticActionDemo\bin\x64\Release\net8.0-windows\win-x64\native\* .
 
       - name: Package
         working-directory: ${{github.workspace}}
