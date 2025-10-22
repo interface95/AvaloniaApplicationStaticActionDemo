@@ -1,82 +1,82 @@
-# Avalonia Static Action Demo
+# Avalonia 静态操作演示
 
-This is an Avalonia UI desktop application that demonstrates AOT (Ahead-of-Time) compilation with SkiaSharp graphics.
+这是一个 Avalonia UI 桌面应用程序，演示了使用 SkiaSharp 图形库的 AOT（提前编译）编译。
 
-## Features
+## 功能特性
 
-- **Avalonia UI**: Modern cross-platform desktop UI framework
-- **SkiaSharp**: High-performance 2D graphics library
-- **AOT Compilation**: Native performance with .NET 9 AOT
-- **Cross-platform**: Supports Windows, macOS, and Linux
+- **Avalonia UI**: 现代化的跨平台桌面 UI 框架
+- **SkiaSharp**: 高性能 2D 图形库
+- **AOT 编译**: 使用 .NET 9 AOT 实现原生性能
+- **跨平台**: 支持 Windows、macOS 和 Linux
 
-## Build and Release
+## 构建和发布
 
-This project uses GitHub Actions for automated building and releasing:
+本项目使用 GitHub Actions 进行自动化构建和发布：
 
-### Workflow Features
+### 工作流特性
 
-- **Windows builds**: Windows x64 platform
-- **AOT compilation**: Native performance with static linking
-- **UPX compression**: Windows executables compressed with UPX (36% size reduction)
-- **Automatic versioning**: Based on Git tags or commit count
-- **Artifact generation**: Windows ZIP package
-- **Release management**: Automatic GitHub releases with assets
+- **Windows 构建**: Windows x64 平台
+- **AOT 编译**: 静态链接的原生性能
+- **UPX 压缩**: Windows 可执行文件使用 UPX 压缩（36% 大小减少）
+- **自动版本管理**: 基于 Git 标签或提交计数
+- **工件生成**: Windows ZIP 包
+- **发布管理**: 自动 GitHub 发布和资源上传
 
-### Triggering Builds
+### 触发构建
 
-1. **Tag-based releases**: Push a tag starting with `v` (e.g., `v1.0.0`)
-2. **Manual dispatch**: Use the "Actions" tab in GitHub to manually trigger builds
+1. **标签发布**: 推送以 `v` 开头的标签（如 `v1.0.0`）
+2. **手动触发**: 在 GitHub 的 "Actions" 标签页手动触发构建
 
-### Package Sources
+### 包源配置
 
-The workflow automatically configures:
-- **NuGet.org**: Standard .NET packages
-- **Avalonia Nightly**: Latest Avalonia UI packages with AOT improvements
-- **SkiaSharp**: High-performance 2D graphics library
+工作流自动配置：
+- **NuGet.org**: 标准 .NET 包
+- **Avalonia 夜间构建**: 最新的 Avalonia UI 包，包含 AOT 改进
+- **SkiaSharp**: 高性能 2D 图形库
 
-## Development
+## 开发
 
-### Prerequisites
+### 前置要求
 
 - .NET 9.0 SDK
-- Visual Studio 2022 or VS Code with C# extension
+- Visual Studio 2022 或带有 C# 扩展的 VS Code
 
-### Building Locally
+### 本地构建
 
 ```bash
-# Restore dependencies
+# 恢复依赖
 dotnet restore
 
-# Build in Debug mode
+# Debug 模式构建
 dotnet build
 
-# Run the application
+# 运行应用程序
 dotnet run --project AvaloniaApplicationStaticActionDemo
 
-# Publish AOT (example for Windows x64)
+# 发布 AOT（Windows x64 示例）
 dotnet publish -r win-x64 -c Release -p:PublishAot=true --self-contained true
 ```
 
-## Project Structure
+## 项目结构
 
 ```
 AvaloniaApplicationStaticActionDemo/
-├── .github/workflows/          # GitHub Actions workflows
+├── .github/workflows/          # GitHub Actions 工作流
 │   └── build-and-publish-aot.yml
 ├── AvaloniaApplicationStaticActionDemo/
-│   ├── App.axaml              # Application definition
-│   ├── MainWindow.axaml       # Main window UI
-│   ├── Program.cs             # Application entry point
+│   ├── App.axaml              # 应用程序定义
+│   ├── MainWindow.axaml       # 主窗口 UI
+│   ├── Program.cs             # 应用程序入口点
 │   └── AvaloniaApplicationStaticActionDemo.csproj
 └── README.md
 ```
 
-## Dependencies
+## 依赖项
 
-- **Avalonia 12.0**: UI framework
-- **SkiaSharp 3.119.0**: High-performance 2D graphics library
-- **.NET 9.0**: Runtime and SDK
+- **Avalonia 12.0**: UI 框架
+- **SkiaSharp 3.119.0**: 高性能 2D 图形库
+- **.NET 9.0**: 运行时和 SDK
 
-## License
+## 许可证
 
-This project is licensed under the MIT License.
+本项目采用 MIT 许可证。
