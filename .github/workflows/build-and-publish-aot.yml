@@ -91,6 +91,9 @@ jobs:
           7z e -y libHarfBuzzSharp-10.0.26100.0.7z
           7z e -y libSkiaSharp-2.88.9-10.0.26100.0.7z
           ls -al
+          echo "📁 创建 native 目录并移动静态库文件..."
+          mkdir -p ../AvaloniaApplicationStaticActionDemo/native
+          mv *.lib *.pdb ../AvaloniaApplicationStaticActionDemo/native/
           echo "✅ 静态库准备完成"
 
       - name: Configure NuGet sources
