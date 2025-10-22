@@ -75,6 +75,19 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Setup MSVC
+      uses: TheMrMilchmann/setup-msvc-dev@v3
+      with:
+        arch: x64
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
     - name: Configure NuGet sources
       run: |
         echo "🔧 配置 NuGet 包源..."
@@ -131,8 +144,19 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       run: |
         echo "Preparing Windows release package..."
+        
+        # 创建原始版本
         Compress-Archive -Path "publish/${{ matrix.runtime }}/*" -DestinationPath "${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
-        echo "Windows release package created: ${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
+        
+        # 使用 7-Zip 创建高压缩版本
+        if (Test-Path "publish/${{ matrix.runtime }}/AvaloniaApplicationStaticActionDemo.exe") {
+          & "C:\Program Files\7-Zip\7z.exe" a -y -mx9 "${{ matrix.artifact-name }}-v${{ env.VERSION }}-compressed.7z" "publish/${{ matrix.runtime }}/*"
+          echo "High compression package created: ${{ matrix.artifact-name }}-v${{ env.VERSION }}-compressed.7z"
+        }
+        
+        echo "Windows release packages created:"
+        echo "- ${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
+        echo "- ${{ matrix.artifact-name }}-v${{ env.VERSION }}-compressed.7z"
       shell: powershell
 
     - name: Upload artifacts
@@ -141,6 +165,7 @@ jobs:
         name: ${{ matrix.artifact-name }}
         path: |
           ${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip
+          ${{ matrix.artifact-name }}-v${{ env.VERSION }}-compressed.7z
         retention-days: 30
 
   create-release:
@@ -224,6 +249,7 @@ jobs:
         prerelease: false
         files: |
           artifacts/*/*-v${{ env.VERSION }}.zip
+          artifacts/*/*-v${{ env.VERSION }}-compressed.7z
         body: |
           ## Avalonia Static Action Demo v${{ env.VERSION }}
 
@@ -231,7 +257,8 @@ jobs:
           **Git Commit**: ${{ env.GIT_HASH }}
 
           ### Downloads
-          - **Windows x64**: AvaloniaApplicationStaticActionDemo-win-x64-v${{ env.VERSION }}.zip
+          - **Windows x64 (ZIP)**: AvaloniaApplicationStaticActionDemo-win-x64-v${{ env.VERSION }}.zip
+          - **Windows x64 (7Z 高压缩)**: AvaloniaApplicationStaticActionDemo-win-x64-v${{ env.VERSION }}-compressed.7z
 
           ### Features
           - Avalonia UI desktop application with SkiaSharp
