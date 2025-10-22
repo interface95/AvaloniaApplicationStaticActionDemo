@@ -20,7 +20,6 @@
         <PublishAot>true</PublishAot>
         <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
         <StaticExecutable>true</StaticExecutable>
-        <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <IncludeNativeLibrariesInSingleFile>true</IncludeNativeLibrariesInSingleFile>
         <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
