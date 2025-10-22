@@ -37,6 +37,7 @@
         <NativeLibrary Include="native\SkiaSharp.lib" />
         <DirectPInvoke Include="av_libglesv2"/>
         <NativeLibrary Include="native\libANGLE_static.lib" />
+        <NativeLibrary Include="native\libEGL_static.lib" />
         <NativeLibrary Include="native\libGLESv2_static.lib" />
         <DirectPInvoke Include="libEGL"/>
         <DirectPInvoke Include="libGLESv2"/>
@@ -48,15 +49,16 @@
     </PropertyGroup>
 
     <ItemGroup Label="PackageReferences">
-        <PackageReference Include="Avalonia" Version="12.0.999-cibuild0058459-alpha"/>
-        <PackageReference Include="Avalonia.Desktop" Version="12.0.999-cibuild0058459-alpha"/>
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="12.0.999-cibuild0058459-alpha"/>
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="12.0.999-cibuild0058459-alpha"/>
+        <PackageReference Include="Avalonia" Version="11.0.7"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.0.7"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.7"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.7"/>
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="Avalonia.Diagnostics" Version="12.0.999-cibuild0058459-alpha">
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.0.7">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">none</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">all</PrivateAssets>
         </PackageReference>
+        <PackageReference Include="SkiaSharp" Version="2.88.9" />
         <PackageReference Include="PolySharp" Version="1.15.0">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
