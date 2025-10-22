@@ -30,6 +30,7 @@ This project uses GitHub Actions for automated building and releasing:
 
 The workflow automatically configures:
 - **NuGet.org**: Standard .NET packages
+- **Avalonia Nightly**: Latest Avalonia UI packages with AOT improvements
 - **SkiaSharp**: High-performance 2D graphics library
 
 ## Development
