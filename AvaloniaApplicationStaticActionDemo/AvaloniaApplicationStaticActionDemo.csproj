@@ -16,10 +16,9 @@
     </PropertyGroup>
 
     <PropertyGroup Label="PublishConfiguration" Condition="'$(Configuration)'=='Release'">
-        <TrimMode>full</TrimMode>
+        <TrimMode>partial</TrimMode>
         <PublishAot>true</PublishAot>
         <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
-        <StaticExecutable>true</StaticExecutable>
         <SelfContained>true</SelfContained>
         <IncludeNativeLibrariesInSingleFile>true</IncludeNativeLibrariesInSingleFile>
         <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
@@ -29,7 +28,8 @@
         <TrimmerRootAssembly Include="Avalonia.Themes.Fluent"/>
     </ItemGroup>
 
-    <ItemGroup Label="ImportLib">
+    <!-- 移除静态链接配置，使用动态链接 -->
+    <!-- <ItemGroup Label="ImportLib">
         <DirectPInvoke Include="libHarfBuzzSharp"/>
         <NativeLibrary Include="native\libHarfBuzzSharp.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))"/>
         <DirectPInvoke Include="libSkiaSharp"/>
@@ -39,7 +39,7 @@
         <NativeLibrary Include="native\libANGLE_static.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))"/>
         <NativeLibrary Include="native\libGLESv2_static.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))"/>
         <LinkerArg Include="d3d9.lib;dxguid.lib" Condition="$(RuntimeIdentifier.StartsWith('win'))"/>
-    </ItemGroup>
+    </ItemGroup> -->
 
     <ItemGroup Label="PackageReferences">
         <PackageReference Include="Avalonia" Version="12.0.999-cibuild0058459-alpha"/>
