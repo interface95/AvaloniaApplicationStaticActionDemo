@@ -1,0 +1,220 @@
+name: Build and Publish AOT
+
+on:
+  push:
+    tags:
+      - 'v*'  # 仅在发布版本标签时触发
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  DOTNET_VERSION: '9.0.x'
+  PROJECT_PATH: 'AvaloniaApplicationStaticActionDemo/AvaloniaApplicationStaticActionDemo.csproj'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            runtime: win-x64
+            artifact-name: AvaloniaApplicationStaticActionDemo-win-x64
+            executable-ext: .exe
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch full history for accurate commit count
+
+    - name: Generate Version
+      id: version
+      shell: bash
+      run: |
+        # Generate version based on tag
+        GIT_HASH=$(git rev-parse --short HEAD)
+        BUILD_DATE=$(date +'%Y%m%d')
+        
+        # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          # Fallback to commit count if no tag
+          MAJOR_VERSION=1
+          MINOR_VERSION=0
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_NUMBER}"
+        fi
+        
+        FULL_VERSION="${VERSION}.0"
+
+        echo "Generated version: ${VERSION}"
+        echo "Full version: ${FULL_VERSION}"
+        echo "Git hash: ${GIT_HASH}"
+        echo "Build date: ${BUILD_DATE}"
+
+        # Set outputs and environment variables
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "full_version=${FULL_VERSION}" >> $GITHUB_OUTPUT
+        echo "git_hash=${GIT_HASH}" >> $GITHUB_OUTPUT
+        echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+        echo "tag_name=v${VERSION}" >> $GITHUB_OUTPUT
+
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "FULL_VERSION=${FULL_VERSION}" >> $GITHUB_ENV
+        echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
+        echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_ENV
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Configure NuGet sources
+      run: |
+        echo "Configuring NuGet sources..."
+        
+        # Clear existing sources and add nuget.org
+        dotnet nuget remove source nuget.org || true
+        dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org
+
+        echo "Configured package sources:"
+        dotnet nuget list source
+      shell: bash
+
+    - name: Restore dependencies
+      run: |
+        echo "Starting package restore with verbose output..."
+        dotnet restore ${{ env.PROJECT_PATH }} --verbosity detailed
+
+    - name: Publish AOT
+      run: dotnet publish ${{ env.PROJECT_PATH }} -r ${{ matrix.runtime }} -c Release -p:PublishAot=true --self-contained true -o publish/${{ matrix.runtime }} -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.FULL_VERSION }} -p:FileVersion=${{ env.FULL_VERSION }}
+
+
+    - name: Remove debug files (Windows)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        # 删除Windows调试文件以减少文件大小
+        echo "删除Windows调试文件..."
+        find "publish/${{ matrix.runtime }}" -name "*.pdb" -type f -delete 2>/dev/null || true
+        echo "Windows调试文件删除完成"
+      shell: bash
+
+    - name: Prepare Windows artifacts (Windows only)
+      if: startsWith(matrix.os, 'windows')
+      run: |
+        # Create zip for Windows with version number
+        Compress-Archive -Path "publish/${{ matrix.runtime }}/*" -DestinationPath "${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
+      shell: powershell
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.artifact-name }}
+        path: |
+          ${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip
+        retention-days: 30
+
+  create-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Generate Version
+      id: version
+      shell: bash
+      run: |
+        # Generate version based on tag
+        GIT_HASH=$(git rev-parse --short HEAD)
+        BUILD_DATE=$(date +'%Y%m%d')
+        
+        # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          # Fallback to commit count if no tag
+          MAJOR_VERSION=1
+          MINOR_VERSION=0
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_NUMBER}"
+        fi
+        
+        FULL_VERSION="${VERSION}.0"
+
+        echo "Generated version: ${VERSION}"
+        echo "Full version: ${FULL_VERSION}"
+        echo "Git hash: ${GIT_HASH}"
+        echo "Build date: ${BUILD_DATE}"
+
+        # Set outputs and environment variables
+        echo "version=${VERSION}" >> $GITHUB_OUTPUT
+        echo "full_version=${FULL_VERSION}" >> $GITHUB_OUTPUT
+        echo "git_hash=${GIT_HASH}" >> $GITHUB_OUTPUT
+        echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
+        echo "tag_name=v${VERSION}" >> $GITHUB_OUTPUT
+
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "FULL_VERSION=${FULL_VERSION}" >> $GITHUB_ENV
+        echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
+        echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_ENV
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Create Tag and Release
+      run: |
+        # Create and push tag
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git tag -a "${{ env.VERSION }}" -m "Release ${{ env.VERSION }}"
+        git push origin "${{ env.VERSION }}"
+
+    - name: Create Release with Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ env.VERSION }}
+        name: Release v${{ env.VERSION }}
+        draft: false
+        prerelease: false
+        files: |
+          artifacts/*/*-v${{ env.VERSION }}.zip
+        body: |
+          ## Avalonia Static Action Demo v${{ env.VERSION }}
+
+          **Build Date**: ${{ env.BUILD_DATE }}
+          **Git Commit**: ${{ env.GIT_HASH }}
+
+          ### Downloads
+          - **Windows x64**: AvaloniaApplicationStaticActionDemo-win-x64-v${{ env.VERSION }}.zip
+
+          ### Features
+          - Avalonia UI desktop application with SkiaSharp
+          - Cross-platform .NET 9 AOT compiled for optimal performance
+          - High-performance 2D graphics with SkiaSharp
+          - Automatic version numbering based on commit count
+
+          ### Installation
+          1. Download the appropriate file for your platform
+          2. Extract the contents to your desired location
+          3. Run the executable directly (no installation required)
+
+          ### System Requirements
+          - **Windows**: Windows 10 or later (x64)
+
+          ### Version History
+          This is an automatically generated release based on commit #${{ env.VERSION }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
