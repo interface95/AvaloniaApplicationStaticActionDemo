@@ -1,13 +1,8 @@
-name: Build and Publish AOT
-
+name: build
 on:
   push:
     tags:
-      - 'v*'  # 仅在发布版本标签时触发
-    paths-ignore:
-      - "*.md"
-  workflow_dispatch:
-
+      - 'v*'
 jobs:
   build:
     runs-on: windows-latest
@@ -15,7 +10,6 @@ jobs:
       id-token: write
       attestations: write
       contents: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -30,59 +24,12 @@ jobs:
         with:
           arch: x64
 
-      - name: Generate Version
-        id: version
-        shell: bash
-        run: |
-          # Generate version based on tag
-          GIT_HASH=$(git rev-parse --short HEAD)
-          BUILD_DATE=$(date +'%Y%m%d')
-          
-          # Extract version from tag (e.g., v1.0.0 -> 1.0.0)
-          if [[ $GITHUB_REF == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          else
-            # Fallback to commit count if no tag
-            MAJOR_VERSION=1
-            MINOR_VERSION=0
-            BUILD_NUMBER=$(git rev-list --count HEAD)
-            VERSION="${MAJOR_VERSION}.${MINOR_VERSION}.${BUILD_NUMBER}"
-          fi
-          
-          FULL_VERSION="${VERSION}.0"
-
-          echo "Generated version: ${VERSION}"
-          echo "Full version: ${FULL_VERSION}"
-          echo "Git hash: ${GIT_HASH}"
-          echo "Build date: ${BUILD_DATE}"
-
-          # Set outputs and environment variables
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "full_version=${FULL_VERSION}" >> $GITHUB_OUTPUT
-          echo "git_hash=${GIT_HASH}" >> $GITHUB_OUTPUT
-          echo "build_date=${BUILD_DATE}" >> $GITHUB_OUTPUT
-          echo "tag_name=v${VERSION}" >> $GITHUB_OUTPUT
-
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "FULL_VERSION=${FULL_VERSION}" >> $GITHUB_ENV
-          echo "GIT_HASH=${GIT_HASH}" >> $GITHUB_ENV
-          echo "BUILD_DATE=${BUILD_DATE}" >> $GITHUB_ENV
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
-
       - name: Prepare
         working-directory: ${{github.workspace}}
         shell: bash
         run: |
-          echo "🚀 开始准备构建环境..."
-          echo "📦 下载 UPX 压缩工具..."
           curl -OL https://github.com/upx/upx/releases/download/v5.0.0/upx-5.0.0-win64.zip
           7z e -y ./*.zip -o"."
-          
-          echo "📚 下载静态库文件..."
           mkdir libs && cd libs
           curl -OL https://github.com/2ndlab/ANGLE.Static/releases/download/v2.0.0-pre/angle-x64-windows-static-chromium-7151-10.0.26100.0.7z
           curl -OL https://github.com/2ndlab/SkiaSharp.Static/releases/download/v2.0.0-pre/libHarfBuzzSharp-10.0.26100.0.7z
@@ -91,146 +38,49 @@ jobs:
           7z e -y libHarfBuzzSharp-10.0.26100.0.7z
           7z e -y libSkiaSharp-2.88.9-10.0.26100.0.7z
           ls -al
-          echo "📁 创建 native 目录并移动静态库文件..."
-          mkdir -p ../AvaloniaApplicationStaticActionDemo/native
           mv *.lib *.pdb ../AvaloniaApplicationStaticActionDemo/native/
-          echo "✅ 静态库准备完成"
-
-      - name: Configure NuGet sources
-        run: |
-          echo "🔧 配置 NuGet 包源..."
-          
-          # Clear existing sources and add nuget.org and Avalonia nightly
-          dotnet nuget remove source nuget.org || true
-          dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org
-          
-          # Add Avalonia nightly feed for latest packages
-          echo "📦 添加 Avalonia 夜间构建源..."
-          dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json --name AvaloniaNightly
-
-          echo "✅ 已配置的包源:"
-          dotnet nuget list source
-        shell: bash
-
-      - name: Restore dependencies
-        run: |
-          echo "📥 开始恢复项目依赖..."
-          echo "⏳ 这可能需要几分钟时间..."
-          dotnet restore AvaloniaApplicationStaticActionDemo/AvaloniaApplicationStaticActionDemo.csproj --verbosity detailed
-          echo "✅ 依赖恢复完成!"
-        shell: bash
 
       - name: Build
         working-directory: ${{github.workspace}}
         shell: pwsh
         run: |
-          echo "🚀 开始 AOT 编译和静态链接..."
-          echo "⏱️  首次构建可能需要 15-30 分钟"
-          echo "📦 嵌入所有依赖库到单个可执行文件..."
-          echo "🔧 编译为原生代码并静态链接..."
-          
           msbuild /m /t:restore AvaloniaApplicationStaticActionDemo.sln /p:Configuration=Release /p:Platform="Any CPU"
-          dotnet publish AvaloniaApplicationStaticActionDemo/AvaloniaApplicationStaticActionDemo.csproj -r win-x64 -c Release --self-contained true
-          
-          echo "✅ AOT 编译完成!"
-          echo "📊 检查输出文件大小..."
-          # 查找实际的可执行文件位置
-          $exePath = Get-ChildItem -Path "AvaloniaApplicationStaticActionDemo" -Recurse -Name "AvaloniaApplicationStaticActionDemo.exe" | Select-Object -First 1
-          if ($exePath) {
-            $fullPath = Join-Path "AvaloniaApplicationStaticActionDemo" $exePath
-            $size = (Get-Item $fullPath).Length
-            $sizeMB = [math]::Round($size / 1MB, 2)
-            echo "📁 可执行文件大小: $sizeMB MB"
-            echo "📁 文件位置: $fullPath"
-          }
-          
-          # 查找并移动所有生成的文件到根目录
-          $publishDir = Get-ChildItem -Path "AvaloniaApplicationStaticActionDemo" -Recurse -Directory -Name "*publish*" | Select-Object -First 1
-          if ($publishDir) {
-            $fullPublishDir = Join-Path "AvaloniaApplicationStaticActionDemo" $publishDir
-            echo "📁 发布目录: $fullPublishDir"
-            Get-ChildItem -Path $fullPublishDir | Move-Item -Destination "."
-          } else {
-            # 备用方案：查找 bin 目录
-            $binDir = Get-ChildItem -Path "AvaloniaApplicationStaticActionDemo" -Recurse -Directory -Name "*bin*" | Where-Object { $_ -like "*Release*" -and $_ -like "*win-x64*" } | Select-Object -First 1
-            if ($binDir) {
-              $fullBinDir = Join-Path "AvaloniaApplicationStaticActionDemo" $binDir
-              echo "📁 使用 bin 目录: $fullBinDir"
-              Get-ChildItem -Path $fullBinDir -File | Move-Item -Destination "."
-            }
-          }
+          dotnet publish AvaloniaApplicationStaticActionDemo\AvaloniaApplicationStaticActionDemo.csproj -r win-x64 -c Release
+          mv AvaloniaApplicationStaticActionDemo\bin\x64\Release\net8.0-windows\win-x64\native\* .
 
       - name: Package
         working-directory: ${{github.workspace}}
         shell: pwsh
         run: |
-          echo "📦 开始打包发布文件..."
-          
-          # 检查文件是否已经被 UPX 压缩
-          $isAlreadyPacked = $false
-          try {
-            ./upx.exe -t .\AvaloniaApplicationStaticActionDemo.exe 2>$null
-            if ($LASTEXITCODE -eq 0) {
-              $isAlreadyPacked = $true
-              echo "ℹ️  文件已经被 UPX 压缩过"
-            }
-          } catch {
-            echo "ℹ️  文件未被 UPX 压缩"
-          }
-          
-          if (-not $isAlreadyPacked) {
-            # 使用 UPX 进行极致压缩
-            echo "🗜️  使用 UPX 进行极致压缩..."
-            ./upx.exe --ultra-brute --overlay=strip .\AvaloniaApplicationStaticActionDemo.exe -o AvaloniaApplicationStaticActionDemo.UPX.exe
-          } else {
-            # 如果已经压缩，直接复制
-            echo "📋 复制已压缩的文件..."
-            Copy-Item .\AvaloniaApplicationStaticActionDemo.exe .\AvaloniaApplicationStaticActionDemo.UPX.exe
-          }
-          
-          # 创建压缩包
-          echo "📁 创建发布包..."
-          if (Test-Path ".\AvaloniaApplicationStaticActionDemo.pdb") {
-            7z a -y -mx9 AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.exe ./AvaloniaApplicationStaticActionDemo.pdb
-          } else {
-            7z a -y -mx9 AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.exe
-          }
-          
-          if (Test-Path ".\AvaloniaApplicationStaticActionDemo.UPX.exe") {
-            7z a -y -mx9 AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.UPX.exe
-          } else {
-            echo "⚠️  UPX 文件不存在，跳过 UPX 版本"
-          }
-          
-          echo "✅ 打包完成!"
+          ./upx.exe --ultra-brute --overlay=strip .\AvaloniaApplicationStaticActionDemo.exe -o AvaloniaApplicationStaticActionDemo.UPX.exe
+          7z a -y -mx9 AvaloniaApplicationStaticActionDemo.7z ./AvaloniaApplicationStaticActionDemo.exe ./AvaloniaApplicationStaticActionDemo.pdb
+          7z a -y -mx9 AvaloniaApplicationStaticActionDemo.UPX.7z ./AvaloniaApplicationStaticActionDemo.UPX.exe
 
       - name: List dir
         working-directory: ${{github.workspace}}
         shell: bash
-        run: |
-          echo "📋 最终文件列表:"
-          ls -al .
+        run: ls -al .
 
       - uses: actions/upload-artifact@v4
         id: upload-artifact-1
         with:
-          name: AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z
-          path: AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z
+          name: AvaloniaApplicationStaticActionDemo.7z
+          path: AvaloniaApplicationStaticActionDemo.7z
 
       - uses: actions/upload-artifact@v4
         id: upload-artifact-2
         with:
-          name: AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z
-          path: AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z
+          name: AvaloniaApplicationStaticActionDemo.UPX.7z
+          path: AvaloniaApplicationStaticActionDemo.UPX.7z
 
       - uses: actions/attest-build-provenance@v2
         with:
-          subject-name: AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z
+          subject-name: AvaloniaApplicationStaticActionDemo.7z
           subject-digest: sha256:${{ steps.upload-artifact-1.outputs.artifact-digest }}
 
       - uses: actions/attest-build-provenance@v2
         with:
-          subject-name: AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z
+          subject-name: AvaloniaApplicationStaticActionDemo.UPX.7z
           subject-digest: sha256:${{ steps.upload-artifact-2.outputs.artifact-digest }}
 
       - name: Release artifacts
@@ -238,34 +88,5 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z
-            AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z
-          body: |
-            ## Avalonia 静态操作演示 v${{ env.VERSION }}
-
-            **构建日期**: ${{ env.BUILD_DATE }}
-            **Git 提交**: ${{ env.GIT_HASH }}
-
-            ### 下载文件
-            - **标准版本**: AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z
-            - **UPX 压缩版本**: AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z
-
-            ### 功能特性
-            - Avalonia UI 桌面应用程序，使用 SkiaSharp 图形库
-            - .NET 9 AOT 编译，实现原生性能
-            - 真正的单文件静态链接，无需外部 DLL
-            - 高性能 2D 图形渲染
-            - 自动版本编号
-
-            ### 安装说明
-            1. 下载适合的 7z 文件
-            2. 解压到所需位置
-            3. 直接运行可执行文件（无需安装）
-
-            ### 系统要求
-            - **Windows**: Windows 10 或更高版本 (x64)
-
-            ### 版本历史
-            这是基于提交 #${{ env.VERSION }} 自动生成的发布版本
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            AvaloniaApplicationStaticActionDemo.7z
+            AvaloniaApplicationStaticActionDemo.UPX.7z

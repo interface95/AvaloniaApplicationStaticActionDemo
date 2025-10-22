@@ -9,6 +9,7 @@
 
     <PropertyGroup Label="ApplicationConfiguration">
         <ApplicationManifest>app.manifest</ApplicationManifest>
+        <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
     </PropertyGroup>
 
     <PropertyGroup Label="AvaloniaConfiguration">
@@ -37,24 +38,24 @@
         <NativeLibrary Include="native\SkiaSharp.lib" />
         <DirectPInvoke Include="av_libglesv2"/>
         <NativeLibrary Include="native\libANGLE_static.lib" />
-        <NativeLibrary Include="native\libEGL.lib" />
         <NativeLibrary Include="native\libGLESv2.lib" />
-        <DirectPInvoke Include="libEGL"/>
-        <DirectPInvoke Include="libGLESv2"/>
-        <LinkerArg Include="d3d9.lib;dxguid.lib" />
+        <NativeLibrary Include="d3d9.lib" />
+        <NativeLibrary Include="dxguid.lib" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
         <AdditionalNativeLibraryPaths>$(MSBuildThisFileDirectory)native</AdditionalNativeLibraryPaths>
     </PropertyGroup>
 
+    <ItemGroup>
+        <AvaloniaResource Include="Assets\**"/>
+    </ItemGroup>
+
     <ItemGroup Label="PackageReferences">
-        <PackageReference Include="Avalonia" Version="11.0.7"/>
-        <PackageReference Include="Avalonia.Desktop" Version="11.0.7"/>
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.0.7"/>
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.0.7"/>
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.0.7">
+        <PackageReference Include="Avalonia" Version="11.3.0" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.0">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">none</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">all</PrivateAssets>
         </PackageReference>
@@ -63,7 +64,6 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="VC-LTL" Version="5.2.2"/>
+        <PackageReference Include="VC-LTL" Version="5.2.2-Beta1" />
     </ItemGroup>
-
 </Project>
