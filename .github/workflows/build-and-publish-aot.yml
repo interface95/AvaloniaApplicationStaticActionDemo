@@ -45,9 +45,14 @@ jobs:
         working-directory: ${{github.workspace}}
         shell: pwsh
         run: |
-          msbuild /m /t:restore AvaloniaApplicationStaticActionDemo.sln /p:Configuration=Release /p:Platform="Any CPU"
+          msbuild /m /t:restore AvaloniaApplicationStaticActionDemo/AvaloniaApplicationStaticActionDemo.csproj /p:Configuration=Release /p:Platform="Any CPU"
           dotnet publish AvaloniaApplicationStaticActionDemo\AvaloniaApplicationStaticActionDemo.csproj -r win-x64 -c Release
-          mv AvaloniaApplicationStaticActionDemo\bin\x64\Release\net8.0-windows\win-x64\native\* .
+          $nativePath = "AvaloniaApplicationStaticActionDemo\bin\Release\net8.0-windows\win-x64\native"
+          if (Test-Path $nativePath) {
+            mv $nativePath\* .
+          } else {
+            Write-Host "native 目录不存在，跳过移动"
+          }
 
       - name: Package
         working-directory: ${{github.workspace}}
