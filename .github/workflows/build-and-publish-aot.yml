@@ -38,6 +38,7 @@ jobs:
           7z e -y libHarfBuzzSharp-10.0.26100.0.7z
           7z e -y libSkiaSharp-2.88.9-10.0.26100.0.7z
           ls -al
+          mkdir -p ../AvaloniaApplicationStaticActionDemo/native
           mv *.lib *.pdb ../AvaloniaApplicationStaticActionDemo/native/
 
       - name: Build
