@@ -163,14 +163,41 @@ jobs:
         run: |
           echo "📦 开始打包发布文件..."
           
-          # 使用 UPX 进行极致压缩
-          echo "🗜️  使用 UPX 进行极致压缩..."
-          ./upx.exe --ultra-brute --overlay=strip .\AvaloniaApplicationStaticActionDemo.exe -o AvaloniaApplicationStaticActionDemo.UPX.exe
+          # 检查文件是否已经被 UPX 压缩
+          $isAlreadyPacked = $false
+          try {
+            ./upx.exe -t .\AvaloniaApplicationStaticActionDemo.exe 2>$null
+            if ($LASTEXITCODE -eq 0) {
+              $isAlreadyPacked = $true
+              echo "ℹ️  文件已经被 UPX 压缩过"
+            }
+          } catch {
+            echo "ℹ️  文件未被 UPX 压缩"
+          }
+          
+          if (-not $isAlreadyPacked) {
+            # 使用 UPX 进行极致压缩
+            echo "🗜️  使用 UPX 进行极致压缩..."
+            ./upx.exe --ultra-brute --overlay=strip .\AvaloniaApplicationStaticActionDemo.exe -o AvaloniaApplicationStaticActionDemo.UPX.exe
+          } else {
+            # 如果已经压缩，直接复制
+            echo "📋 复制已压缩的文件..."
+            Copy-Item .\AvaloniaApplicationStaticActionDemo.exe .\AvaloniaApplicationStaticActionDemo.UPX.exe
+          }
           
           # 创建压缩包
           echo "📁 创建发布包..."
-          7z a -y -mx9 AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.exe ./AvaloniaApplicationStaticActionDemo.pdb
-          7z a -y -mx9 AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.UPX.exe
+          if (Test-Path ".\AvaloniaApplicationStaticActionDemo.pdb") {
+            7z a -y -mx9 AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.exe ./AvaloniaApplicationStaticActionDemo.pdb
+          } else {
+            7z a -y -mx9 AvaloniaApplicationStaticActionDemo-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.exe
+          }
+          
+          if (Test-Path ".\AvaloniaApplicationStaticActionDemo.UPX.exe") {
+            7z a -y -mx9 AvaloniaApplicationStaticActionDemo-UPX-v${{ env.VERSION }}.7z ./AvaloniaApplicationStaticActionDemo.UPX.exe
+          } else {
+            echo "⚠️  UPX 文件不存在，跳过 UPX 版本"
+          }
           
           echo "✅ 打包完成!"
 
