@@ -105,6 +105,7 @@ jobs:
         echo "⏱️  首次构建可能需要 15-30 分钟"
         echo "📦 嵌入 SkiaSharp 原生库和 .NET 运行时..."
         echo "🔧 编译为原生代码..."
+        echo "💡 Windows 版本将使用 UPX 压缩，macOS/Linux 不支持"
         
         dotnet publish ${{ env.PROJECT_PATH }} -r ${{ matrix.runtime }} -c Release -p:PublishAot=true --self-contained true -o publish/${{ matrix.runtime }} -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.FULL_VERSION }} -p:FileVersion=${{ env.FULL_VERSION }} -p:EnableCompressionInSingleFile=true -p:PublishSingleFile=true --verbosity normal
           

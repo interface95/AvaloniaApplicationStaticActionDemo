@@ -17,6 +17,7 @@ This project uses GitHub Actions for automated building and releasing:
 
 - **Windows builds**: Windows x64 platform
 - **AOT compilation**: Native performance with static linking
+- **UPX compression**: Windows executables compressed with UPX (36% size reduction)
 - **Automatic versioning**: Based on Git tags or commit count
 - **Artifact generation**: Windows ZIP package
 - **Release management**: Automatic GitHub releases with assets
