@@ -9,7 +9,6 @@
 
     <PropertyGroup Label="ApplicationConfiguration">
         <ApplicationManifest>app.manifest</ApplicationManifest>
-        <ApplicationIcon>Assets\avalonia-logo.ico</ApplicationIcon>
     </PropertyGroup>
 
     <PropertyGroup Label="AvaloniaConfiguration">
@@ -46,10 +45,6 @@
     <PropertyGroup Condition="'$(RuntimeIdentifier)' == 'win-x64'">
         <AdditionalNativeLibraryPaths>$(MSBuildThisFileDirectory)native</AdditionalNativeLibraryPaths>
     </PropertyGroup>
-
-    <ItemGroup>
-        <AvaloniaResource Include="Assets\**"/>
-    </ItemGroup>
 
     <ItemGroup Label="PackageReferences">
         <PackageReference Include="Avalonia" Version="11.3.0" />
