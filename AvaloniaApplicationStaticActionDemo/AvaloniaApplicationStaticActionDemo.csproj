@@ -37,7 +37,8 @@
         <NativeLibrary Include="native\SkiaSharp.lib" />
         <DirectPInvoke Include="av_libglesv2"/>
         <NativeLibrary Include="native\libANGLE_static.lib" />
-        <NativeLibrary Include="native\libGLESv2.lib" />
+        <NativeLibrary Include="native\libEGL_static.lib" />
+        <NativeLibrary Include="native\libGLESv2_static.lib" />
         <NativeLibrary Include="d3d9.lib" />
         <NativeLibrary Include="dxguid.lib" />
     </ItemGroup>
