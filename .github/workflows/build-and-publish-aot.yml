@@ -121,17 +121,17 @@ jobs:
     - name: Remove debug files (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
-        echo "🧹 清理 Windows 调试文件以减少文件大小..."
+        echo "Cleaning Windows debug files to reduce size..."
         Get-ChildItem -Path "publish/${{ matrix.runtime }}" -Filter "*.pdb" -Recurse | Remove-Item -Force
-        echo "✅ Windows 调试文件清理完成"
+        echo "Windows debug files cleaned successfully"
       shell: powershell
 
     - name: Prepare Windows artifacts (Windows only)
       if: startsWith(matrix.os, 'windows')
       run: |
-        echo "📦 准备 Windows 发布包..."
+        echo "Preparing Windows release package..."
         Compress-Archive -Path "publish/${{ matrix.runtime }}/*" -DestinationPath "${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
-        echo "✅ Windows 发布包创建完成: ${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
+        echo "Windows release package created: ${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
       shell: powershell
 
     - name: Upload artifacts
