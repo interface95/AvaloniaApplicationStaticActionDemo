@@ -106,18 +106,7 @@ jobs:
         echo "📦 嵌入 SkiaSharp 原生库和 .NET 运行时..."
         echo "🔧 编译为原生代码..."
         
-        dotnet publish ${{ env.PROJECT_PATH }} \
-          -r ${{ matrix.runtime }} \
-          -c Release \
-          -p:PublishAot=true \
-          --self-contained true \
-          -o publish/${{ matrix.runtime }} \
-          -p:Version=${{ env.VERSION }} \
-          -p:AssemblyVersion=${{ env.FULL_VERSION }} \
-          -p:FileVersion=${{ env.FULL_VERSION }} \
-          -p:EnableCompressionInSingleFile=true \
-          -p:PublishSingleFile=true \
-          --verbosity normal
+        dotnet publish ${{ env.PROJECT_PATH }} -r ${{ matrix.runtime }} -c Release -p:PublishAot=true --self-contained true -o publish/${{ matrix.runtime }} -p:Version=${{ env.VERSION }} -p:AssemblyVersion=${{ env.FULL_VERSION }} -p:FileVersion=${{ env.FULL_VERSION }} -p:EnableCompressionInSingleFile=true -p:PublishSingleFile=true --verbosity normal
           
         echo "✅ AOT 编译完成!"
         echo "📊 检查输出文件大小..."
@@ -126,15 +115,16 @@ jobs:
           echo "📁 可执行文件大小: $(( size / 1024 / 1024 )) MB"
         fi
       timeout-minutes: 60
+      shell: bash
 
 
     - name: Remove debug files (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
         echo "🧹 清理 Windows 调试文件以减少文件大小..."
-        find "publish/${{ matrix.runtime }}" -name "*.pdb" -type f -delete 2>/dev/null || true
+        Get-ChildItem -Path "publish/${{ matrix.runtime }}" -Filter "*.pdb" -Recurse | Remove-Item -Force
         echo "✅ Windows 调试文件清理完成"
-      shell: bash
+      shell: powershell
 
     - name: Prepare Windows artifacts (Windows only)
       if: startsWith(matrix.os, 'windows')
