@@ -77,31 +77,34 @@ jobs:
 
     - name: Configure NuGet sources
       run: |
-        echo "Configuring NuGet sources..."
+        echo "🔧 配置 NuGet 包源..."
         
         # Clear existing sources and add nuget.org and Avalonia nightly
         dotnet nuget remove source nuget.org || true
         dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org
         
         # Add Avalonia nightly feed for latest packages
-        echo "Adding Avalonia nightly feed..."
+        echo "📦 添加 Avalonia 夜间构建源..."
         dotnet nuget add source https://nuget-feed-nightly.avaloniaui.net/v3/index.json --name AvaloniaNightly
 
-        echo "Configured package sources:"
+        echo "✅ 已配置的包源:"
         dotnet nuget list source
       shell: bash
 
     - name: Restore dependencies
       run: |
-        echo "Starting package restore with verbose output..."
+        echo "📥 开始恢复项目依赖..."
+        echo "⏳ 这可能需要几分钟时间..."
         dotnet restore ${{ env.PROJECT_PATH }} --verbosity detailed
+        echo "✅ 依赖恢复完成!"
+      shell: bash
 
     - name: Publish AOT
       run: |
-        echo "🚀 Starting AOT compilation and static linking..."
-        echo "⏱️  This process may take 15-30 minutes for first build"
-        echo "📦 Embedding SkiaSharp native libraries and .NET runtime..."
-        echo "🔧 Compiling to native code..."
+        echo "🚀 开始 AOT 编译和静态链接..."
+        echo "⏱️  首次构建可能需要 15-30 分钟"
+        echo "📦 嵌入 SkiaSharp 原生库和 .NET 运行时..."
+        echo "🔧 编译为原生代码..."
         
         dotnet publish ${{ env.PROJECT_PATH }} \
           -r ${{ matrix.runtime }} \
@@ -116,11 +119,11 @@ jobs:
           -p:PublishSingleFile=true \
           --verbosity normal
           
-        echo "✅ AOT compilation completed!"
-        echo "📊 Checking output size..."
+        echo "✅ AOT 编译完成!"
+        echo "📊 检查输出文件大小..."
         if [ -f "publish/${{ matrix.runtime }}/AvaloniaApplicationStaticActionDemo.exe" ]; then
           size=$(stat -f%z "publish/${{ matrix.runtime }}/AvaloniaApplicationStaticActionDemo.exe" 2>/dev/null || stat -c%s "publish/${{ matrix.runtime }}/AvaloniaApplicationStaticActionDemo.exe" 2>/dev/null)
-          echo "📁 Executable size: $(( size / 1024 / 1024 )) MB"
+          echo "📁 可执行文件大小: $(( size / 1024 / 1024 )) MB"
         fi
       timeout-minutes: 60
 
@@ -128,17 +131,17 @@ jobs:
     - name: Remove debug files (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
-        # 删除Windows调试文件以减少文件大小
-        echo "删除Windows调试文件..."
+        echo "🧹 清理 Windows 调试文件以减少文件大小..."
         find "publish/${{ matrix.runtime }}" -name "*.pdb" -type f -delete 2>/dev/null || true
-        echo "Windows调试文件删除完成"
+        echo "✅ Windows 调试文件清理完成"
       shell: bash
 
     - name: Prepare Windows artifacts (Windows only)
       if: startsWith(matrix.os, 'windows')
       run: |
-        # Create zip for Windows with version number
+        echo "📦 准备 Windows 发布包..."
         Compress-Archive -Path "publish/${{ matrix.runtime }}/*" -DestinationPath "${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
+        echo "✅ Windows 发布包创建完成: ${{ matrix.artifact-name }}-v${{ env.VERSION }}.zip"
       shell: powershell
 
     - name: Upload artifacts
@@ -205,11 +208,21 @@ jobs:
 
     - name: Create Tag and Release
       run: |
+        echo "🏷️  创建发布标签..."
         # Create and push tag
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git tag -a "${{ env.VERSION }}" -m "Release ${{ env.VERSION }}"
         git push origin "${{ env.VERSION }}"
+        echo "✅ 发布标签创建完成: ${{ env.VERSION }}"
+
+    - name: Prepare Release Info
+      run: |
+        echo "📦 准备创建 GitHub 发布..."
+        echo "🏷️  版本: ${{ env.VERSION }}"
+        echo "📅 构建日期: ${{ env.BUILD_DATE }}"
+        echo "🔗 Git 提交: ${{ env.GIT_HASH }}"
+        echo "📁 发布文件: artifacts/*/*-v${{ env.VERSION }}.zip"
 
     - name: Create Release with Assets
       uses: softprops/action-gh-release@v1
