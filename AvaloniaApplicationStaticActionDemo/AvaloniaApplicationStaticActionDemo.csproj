@@ -27,13 +27,13 @@
         <PackageReference Include="SkiaSharp" Version="3.119.0" />
     </ItemGroup>
 
-    <PropertyGroup>
-        <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>
-    </PropertyGroup>
+<!--    <PropertyGroup>-->
+<!--        <IsWindows Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' == 'true'">true</IsWindows>-->
+<!--    </PropertyGroup>-->
 
-    <!--只有在windows下才启用UPX压缩，macOS和Linux不支持-->
-    <ItemGroup Condition="'$(IsWindows)'=='true' AND '$(RuntimeIdentifier)' == 'win-x64'">
-        <PackageReference Include="PublishAotCompressed" Version="1.0.3" />
-    </ItemGroup>
+<!--    &lt;!&ndash;只有在windows下才启用UPX压缩，macOS和Linux不支持&ndash;&gt;-->
+<!--    <ItemGroup Condition="'$(IsWindows)'=='true' AND '$(RuntimeIdentifier)' == 'win-x64'">-->
+<!--        <PackageReference Include="PublishAotCompressed" Version="1.0.3" />-->
+<!--    </ItemGroup>-->
 
 </Project>
