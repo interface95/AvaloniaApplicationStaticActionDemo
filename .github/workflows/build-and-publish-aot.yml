@@ -71,7 +71,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '8.0.x'
 
       - name: Prepare
         working-directory: ${{github.workspace}}
@@ -127,7 +127,7 @@ jobs:
           echo "🔧 编译为原生代码并静态链接..."
           
           msbuild /m /t:restore AvaloniaApplicationStaticActionDemo.sln /p:Configuration=Release /p:Platform="Any CPU"
-          dotnet publish AvaloniaApplicationStaticActionDemo/AvaloniaApplicationStaticActionDemo.csproj -r win-x64 -c Release
+          dotnet publish AvaloniaApplicationStaticActionDemo/AvaloniaApplicationStaticActionDemo.csproj -r win-x64 -c Release --self-contained true
           
           echo "✅ AOT 编译完成!"
           echo "📊 检查输出文件大小..."
