@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
-        <TargetFramework>net8.0-windows</TargetFramework>
+        <TargetFramework>net9.0-windows</TargetFramework>
         <Nullable>enable</Nullable>
         <LangVersion>13</LangVersion>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
@@ -47,11 +47,11 @@
     </PropertyGroup>
 
     <ItemGroup Label="PackageReferences">
-        <PackageReference Include="Avalonia" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.0">
+        <PackageReference Include="Avalonia" Version="11.3.7" />
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.7" />
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.7" />
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.7" />
+        <PackageReference Include="Avalonia.Diagnostics" Version="11.3.7">
             <IncludeAssets Condition="'$(Configuration)' != 'Debug'">none</IncludeAssets>
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">all</PrivateAssets>
         </PackageReference>
