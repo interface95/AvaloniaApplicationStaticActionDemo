@@ -32,8 +32,8 @@ jobs:
           7z e -y ./*.zip -o"."
           mkdir libs && cd libs
           curl -OL https://github.com/2ndlab/ANGLE.Static/releases/download/v2.0.0-pre/angle-x64-windows-static-chromium-7151-10.0.26100.0.7z
-          cp ../vendor/skia3/libHarfBuzzSharp-3.119.0-10.0.26100.0.7z .
-          cp ../vendor/skia3/libSkiaSharp-3.119.0-10.0.26100.0.7z .
+          curl -OL https://github.com/interface95/SkiaSharp.Static/releases/download/3.0/libHarfBuzzSharp-3.119.0-10.0.26100.0.7z
+          curl -OL https://github.com/interface95/SkiaSharp.Static/releases/download/3.0/libSkiaSharp-3.119.0-10.0.26100.0.7z
           7z e -y angle-x64-windows-static-chromium-7151-10.0.26100.0.7z 
           7z e -y libHarfBuzzSharp-3.119.0-10.0.26100.0.7z
           7z e -y libSkiaSharp-3.119.0-10.0.26100.0.7z
